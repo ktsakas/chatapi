@@ -1,8 +1,9 @@
 package model
 
 import (
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/jinzhu/gorm"
+	// gorm postgres
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 // Connect to the database or panic.
