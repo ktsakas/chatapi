@@ -1,7 +1,6 @@
 package test
 
 import (
-	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -12,12 +11,24 @@ import (
 )
 
 func TestBadCreateUserRequest(t *testing.T) {
+	request := gorequest.New()
+	resp, _, _ := request.Post("http://localhost:8080/user").
+		Type("form").
+		SendMap(map[string]string{
+			"email":    "user@test.com",
+			"password": "testing9",
+		}).
+		End()
 
+	// Check for bad request status code
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Error("POST: /user should have bad request status but did not")
+	}
 }
 
 func TestValidCreateUserRequest(t *testing.T) {
 	request := gorequest.New()
-	resp, body, _ := request.Post("http://localhost:8080/user").
+	resp, _, _ := request.Post("http://localhost:8080/user").
 		Type("form").
 		SendMap(map[string]string{
 			"email":      "user@test.com",
@@ -32,19 +43,30 @@ func TestValidCreateUserRequest(t *testing.T) {
 		t.Error("POST: /user failed with status ", resp.StatusCode)
 	}
 
-	print(body)
-	checkLowercaseJSONKeys(resp.Body, t)
-}
-
-// Enusre that all keys in the returned json object are lowercase.
-func checkLowercaseJSONKeys(jsonStr io.Reader, t *testing.T) {
+	// Decode json
 	var jsonMap map[string]string
-	var dec = json.NewDecoder(jsonStr)
+	var dec = json.NewDecoder(resp.Body)
 	dec.Decode(&jsonMap)
 
+	testLowerJSONKeys(jsonMap, t)
+	testUserExists(jsonMap["id"], t)
+}
+
+// Test that all keys in the returned json object are lowercase.
+func testLowerJSONKeys(jsonMap map[string]string, t *testing.T) {
 	for key := range jsonMap {
 		if key != strings.ToLower(key) {
 			t.Error("Invalid JSON key ", key)
 		}
+	}
+}
+
+// Test that a user with the given ID exists.
+func testUserExists(userID string, t *testing.T) {
+	request := gorequest.New()
+	resp, _, _ := request.Get("http://localhost:8080/user/" + userID).End()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Error("User with id " + userID + " does not exist")
 	}
 }
