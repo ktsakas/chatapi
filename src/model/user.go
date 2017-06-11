@@ -32,7 +32,6 @@ func (user *User) BeforeCreate(scope *gorm.Scope) error {
 // and returns the stored record.
 func (user *User) Create() {
 	db.Create(&user)
-	// db.First(user)
 }
 
 // UserByID finds the user given his id.

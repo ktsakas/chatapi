@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./chat"
 	"./controller"
 
 	"github.com/gin-gonic/gin"
@@ -8,9 +9,15 @@ import (
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
+
 	r.POST("/user", controller.PostUser)
 	r.PUT("/user/:id", controller.PutUser)
 	r.GET("/user/:id", controller.GetUser)
+
+	var chatServer = chat.New()
+	r.GET("/chat/", gin.WrapH(chatServer))
+	// r.POST("/chat/", chat.Handler)
+	// r.Handle("WS", "/chat/", chat.Handler)
 
 	r.GET("/conversation/:channel_id", func(c *gin.Context) {
 		// channelId := c.Query("channel_id")
