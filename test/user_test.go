@@ -2,7 +2,6 @@ package test
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"encoding/json"
@@ -48,17 +47,7 @@ func TestValidCreateUserRequest(t *testing.T) {
 	var dec = json.NewDecoder(resp.Body)
 	dec.Decode(&jsonMap)
 
-	testLowerJSONKeys(jsonMap, t)
 	testUserExists(jsonMap["id"], t)
-}
-
-// Test that all keys in the returned json object are lowercase.
-func testLowerJSONKeys(jsonMap map[string]string, t *testing.T) {
-	for key := range jsonMap {
-		if key != strings.ToLower(key) {
-			t.Error("Invalid JSON key ", key)
-		}
-	}
 }
 
 // Test that a user with the given ID exists.

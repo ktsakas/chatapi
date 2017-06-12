@@ -6,6 +6,11 @@ import (
 
 var server *socketio.Server
 
+type chat struct {
+	queuedChannels []int
+	orgChannels    []int
+}
+
 // New starts accepting websocket connections for chatting
 func New() *socketio.Server {
 	var err error
@@ -18,6 +23,10 @@ func New() *socketio.Server {
 	server.On("connection", func(so socketio.Socket) {
 		println("test")
 		so.Join("global")
+
+		so.On("joinQueue", func(so socketio.Socket) {
+
+		})
 
 		so.On("global message", func(so socketio.Socket) {
 			println("gotmessage")

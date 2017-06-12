@@ -12,7 +12,7 @@ type signupForm struct {
 	Email     string `form:"email" binding:"required"`
 	Password  string `form:"password" binding:"required"`
 	Sex       string `form:"sex" binding:"required"`
-	TalkingTo string `form:"talking_to" binding:"required"`
+	TalkingTo string `form:"talkingTo" binding:"required"`
 }
 
 // PostUser controller creates a new user

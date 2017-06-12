@@ -13,11 +13,11 @@ type User struct {
 	Email      string    `json:"email"`
 	Password   string    `json:"password"`
 	Sex        string    `json:"sex"`
-	TalkingTo  string    `json:"talking_to"`
+	TalkingTo  string    `json:"talkingTo"`
 	University string    `json:"university"`
 	Contacts   []User    `json:"contacts"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 // BeforeCreate sets the UUID before user creation

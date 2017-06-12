@@ -9,7 +9,6 @@ import (
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
-
 	r.POST("/user", controller.PostUser)
 	r.PUT("/user/:id", controller.PutUser)
 	r.GET("/user/:id", controller.GetUser)
