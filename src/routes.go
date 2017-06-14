@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"./chat"
 	"./controller"
 
@@ -13,8 +15,11 @@ func SetRoutes(r *gin.Engine) {
 	r.PUT("/user/:id", controller.PutUser)
 	r.GET("/user/:id", controller.GetUser)
 
-	var chatServer = chat.New()
-	r.GET("/chat/", gin.WrapH(chatServer))
+	hub := chat.NewRoom()
+	go hub.Run()
+	r.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
+		chat.ServeWs(hub, w, r)
+	}))
 	// r.POST("/chat/", chat.Handler)
 	// r.Handle("WS", "/chat/", chat.Handler)
 
