@@ -42,6 +42,16 @@ func UserByID(id string) User {
 	return user
 }
 
+// UserByEmail finds the user given his id.
+func UserByEmail(email string) *User {
+	var user = &User{
+		Email: email,
+	}
+
+	db.First(user)
+	return user
+}
+
 // ValidateUserCredentials checks the username and password against the databse
 func ValidateUserCredentials(email, password string) (*User, bool) {
 	var user = User{}

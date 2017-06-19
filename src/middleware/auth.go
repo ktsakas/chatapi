@@ -5,7 +5,9 @@ import (
 
 	"../model"
 
-	jwt "github.com/appleboy/gin-jwt"
+	"fmt"
+
+	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,12 +27,24 @@ func Auth() *jwt.GinJWTMiddleware {
 			return username, false
 		},
 		Authorizator: func(username string, c *gin.Context) bool {
-			if username == "admin" {
+			var claims = jwt.ExtractClaims(c)
+			fmt.Println(claims["uuid"])
+			if username != "" {
 				return true
 			}
 
 			return false
 		},
+		PayloadFunc: func(userEmail string) map[string]interface{} {
+			var userDetails = make(map[string]interface{})
+			var user = model.UserByEmail(userEmail)
+			userDetails["uuid"] = user.ID
+			return userDetails
+		},
+
+		// IdentityHandler: func(c *gin.Context) string {
+		// 	return "test"
+		// },
 		Unauthorized: func(c *gin.Context, code int, message string) {
 			c.JSON(code, gin.H{
 				"code":    code,
