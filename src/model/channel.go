@@ -7,8 +7,9 @@ import (
 
 // Channel model
 type Channel struct {
-	ID    string `json:"id"`
-	Email string `json:"organization"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Domain string `json:"domain"`
 }
 
 // BeforeCreate sets the UUID before channel creation

@@ -11,24 +11,32 @@ import (
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
+	var authMiddleware = AuthMiddleware()
+
+	r.POST("/login", authMiddleware.LoginHandler)
 	r.POST("/user", controller.PostUser)
-	r.PUT("/user/:id", controller.PutUser)
-	r.GET("/user/:id", controller.GetUser)
 
-	hub := chat.NewRoom()
-	go hub.Run()
-	r.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
-		chat.ServeWs(hub, w, r)
-	}))
-	// r.POST("/chat/", chat.Handler)
-	// r.Handle("WS", "/chat/", chat.Handler)
+	var auth = r.Group("/")
+	auth.Use(authMiddleware.MiddlewareFunc())
+	{
+		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		auth.PUT("/user/:id", controller.PutUser)
+		auth.GET("/user/:id", controller.GetUser)
 
-	r.GET("/conversation/:channel_id", func(c *gin.Context) {
-		// channelId := c.Query("channel_id")
+		hub := chat.New()
+		auth.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
+			hub.Serve(w, r)
+		}))
+		// r.POST("/chat/", chat.Handler)
+		// r.Handle("WS", "/chat/", chat.Handler)
 
-		// var messages = []model.Message{}
-		// db.Where("sender_uuid = ? AND receiver_uuid = ?", user1, user2).Or("receiver_uuid = ? AND sender_uuid = ?", user1, user2).Find(&messages)
+		auth.GET("/conversation/:channel_id", func(c *gin.Context) {
+			// channelId := c.Query("channel_id")
 
-		// c.JSON(200, messages)
-	})
+			// var messages = []model.Message{}
+			// db.Where("sender_uuid = ? AND receiver_uuid = ?", user1, user2).Or("receiver_uuid = ? AND sender_uuid = ?", user1, user2).Find(&messages)
+
+			// c.JSON(200, messages)
+		})
+	}
 }

@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 )
 
-// Chat is a middleman between incoming messages
+// Hub is a middleman between incoming connections
 // and chat rooms.
-type Chat struct {
+type Hub struct {
 	// Set of clients that have not been paired with someone to talk.
 	unpaired *list.List
 
@@ -21,14 +21,22 @@ type Chat struct {
 
 	// Unregister requests from the clients.
 	unregister chan *Client
+
+	// SearchMarch request to get matched to a user.
+	searchMatch chan *Client
 }
 
 // New creates a new chat application instance.
-func New() *Chat {
-	return &Chat{
-		unpaired: list.New(),
-		register: make(chan *Client),
+func New() *Hub {
+	var newHub = &Hub{
+		unpaired:    list.New(),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
+		searchMatch: make(chan *Client),
 	}
+
+	go newHub.run()
+	return newHub
 }
 
 func sameInterests(userA *model.User, userB *model.User) bool {
@@ -40,10 +48,10 @@ func isMatch(userA *model.User, userB *model.User) bool {
 }
 
 // findMatch finds another client to pair with or returns nil
-func (chat *Chat) findMatch(client *Client) *list.Element {
-	var user = chat.users[client]
-	for e := chat.unpaired.Front(); e != nil; e = e.Next() {
-		var possibleMatch = chat.users[e.Value.(*Client)]
+func (hub *Hub) findMatch(client *Client) *list.Element {
+	var user = hub.users[client]
+	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
+		var possibleMatch = hub.users[e.Value.(*Client)]
 
 		if isMatch(user, possibleMatch) {
 			return e
@@ -53,11 +61,11 @@ func (chat *Chat) findMatch(client *Client) *list.Element {
 	return nil
 }
 
-func (chat *Chat) getPositionInQueue(client *Client) int {
-	var user = chat.users[client]
+func (hub *Hub) getPositionInQueue(client *Client) int {
+	var user = hub.users[client]
 	var queueNum = 1
-	for e := chat.unpaired.Front(); e != nil; e = e.Next() {
-		var competitor = chat.users[e.Value.(*Client)]
+	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
+		var competitor = hub.users[e.Value.(*Client)]
 
 		if sameInterests(user, competitor) {
 			queueNum++
@@ -67,18 +75,18 @@ func (chat *Chat) getPositionInQueue(client *Client) int {
 	return queueNum
 }
 
-func (chat *Chat) updateQueuePositions(paired *Client) {
-	var pairedUser = chat.users[paired]
+func (hub *Hub) updateQueuePositions(paired *Client) {
+	var pairedUser = hub.users[paired]
 	var queueNum = 1
-	for e := chat.unpaired.Front(); e != nil; e = e.Next() {
+	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
 		var queuedClient = e.Value.(*Client)
-		var queuedUser = chat.users[queuedClient]
+		var queuedUser = hub.users[queuedClient]
 
 		if sameInterests(pairedUser, queuedUser) {
 			// Update queue number
 			var json, _ = json.Marshal(QueuePositionMessage{
-				msgType:  "queuePosition",
-				position: queueNum,
+				Type:     "queuePosition",
+				Position: queueNum,
 			})
 
 			queuedClient.send <- json
@@ -87,26 +95,26 @@ func (chat *Chat) updateQueuePositions(paired *Client) {
 	}
 }
 
-func (chat *Chat) Run() {
-	var client = <-chat.register
-	var matchE = chat.findMatch(client)
+func (hub *Hub) run() {
+	var client = <-hub.searchMatch
+	var matchE = hub.findMatch(client)
 
 	if matchE != nil {
 		// Found a match.
 		var match = matchE.Value.(*Client)
-		chat.unpaired.Remove(matchE)
-		chat.updateQueuePositions(match)
+		hub.unpaired.Remove(matchE)
+		hub.updateQueuePositions(match)
 
 	} else {
 		// Could not find a match, put the client in the queue.
-		chat.unpaired.PushBack(client)
+		hub.unpaired.PushBack(client)
 
 		// Notify the client of its position in the queue
-		var queueNum = chat.getPositionInQueue(client)
+		var queueNum = hub.getPositionInQueue(client)
 		var json, _ = json.Marshal(QueuePositionMessage{
-			msgType:  "queuePosition",
-			position: queueNum,
+			Type:     "queuePosition",
+			Position: queueNum,
 		})
-		queuedClient.send <- json
+		client.send <- json
 	}
 }

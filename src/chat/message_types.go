@@ -2,15 +2,29 @@ package chat
 
 import "encoding/json"
 
+// Define message types
+const (
+	UserMsgType          = "userMessage"
+	QueuePositionMsgType = "queuePosition"
+)
+
+// QueuePositionMessage is a notification of the queue position sent to the user.
 type QueuePositionMessage struct {
-	msgType  string `json:"type"`
-	position int
+	Type     string `json:"type"`
+	Position int
 }
 
+// ConnectMessage is a notification that a user has joined a channel.
+type ConnectMessage struct {
+	Type    string `json:"connection"`
+	Channel int
+}
+
+// UserMessage is a chat message sent by a user.
 type UserMessage struct {
-	msgType string `json:"type"`
-	channel int
-	text    string
+	Type    string `json:"type"`
+	Channel int
+	Text    string
 }
 
 // GetMessageType returns the type of the message
