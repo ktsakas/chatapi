@@ -5,13 +5,14 @@ import (
 
 	"./chat"
 	"./controller"
+	"./middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
-	var authMiddleware = AuthMiddleware()
+	var authMiddleware = middleware.Auth()
 
 	r.POST("/login", authMiddleware.LoginHandler)
 	r.POST("/user", controller.PostUser)

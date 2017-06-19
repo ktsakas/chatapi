@@ -1,11 +1,15 @@
-CREATE DATABASE collegechat;
-SET DATABASE = collegechat;
+DROP TABLE contacts;
+DROP TABLE messages;
+DROP TABLE channels;
+DROP TABLE users;
 
 -- Create users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE,
     password VARCHAR(255),
+    university VARCHAR(255),
+    talking_to VARCHAR(255),
     sex VARCHAR(255),
     created_at TIMESTAMP,
     updated_at TIMESTAMP

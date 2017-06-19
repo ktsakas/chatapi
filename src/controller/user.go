@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"../model"
@@ -26,18 +27,23 @@ func PostUser(c *gin.Context) {
 			Sex:       form.Sex,
 			TalkingTo: form.TalkingTo,
 		}
-		user.Create()
+		var err = user.Create()
+		if err != nil {
+			log.Fatal(err)
+			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": "user already exists"})
+			return
+		}
 
 		c.JSON(http.StatusOK, user)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": "bad request"})
 	}
 }
 
 // PutUser controller updates the user info
 func PutUser(c *gin.Context) {
-	uuid := c.Param("id")
-	var user = model.User{ID: uuid}
+	var id = c.Param("id")
+	var user = model.User{ID: id}
 	user.Create()
 }
 
