@@ -9,6 +9,9 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+// Valid user id for testing
+var testUserID string
+
 func TestBadCreateUserRequest(t *testing.T) {
 	request := gorequest.New()
 	resp, _, _ := request.Post("http://localhost:8080/user").

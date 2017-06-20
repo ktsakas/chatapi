@@ -29,27 +29,47 @@ func (user *User) BeforeCreate(scope *gorm.Scope) error {
 // Create adds the user struct in the database
 // and returns the stored record.
 func (user *User) Create() error {
-	return db.Create(&user).Error
+	var err = db.Create(&user).Error
+
+	if err != nil {
+		var _, lookupErr = UserByEmail(user.Email)
+
+		if lookupErr == nil {
+			return ErrRecordExists
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 // UserByID finds the user given his id.
-func UserByID(id string) User {
+func UserByID(id string) (*User, error) {
 	var user = User{
 		ID: id,
 	}
 
-	db.First(&user)
-	return user
+	var err = db.First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
-// UserByEmail finds the user given his id.
-func UserByEmail(email string) *User {
-	var user = &User{
+// UserByEmail finds the user given his email.
+func UserByEmail(email string) (*User, error) {
+	var user = User{
 		Email: email,
 	}
 
-	db.First(user)
-	return user
+	var err = db.First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 // ValidateUserCredentials checks the username and password against the databse

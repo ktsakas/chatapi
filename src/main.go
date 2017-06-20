@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"./model"
+	"./route"
 	"github.com/gin-gonic/gin"
-	cors "github.com/itsjamie/gin-cors"
+	"github.com/itsjamie/gin-cors"
 	"github.com/joho/godotenv"
 )
 
@@ -34,6 +35,6 @@ func main() {
 		ValidateHeaders: false,
 	}))
 
-	SetRoutes(r)
+	route.SetRoutes(r)
 	r.Run("127.0.0.1:" + port)
 }

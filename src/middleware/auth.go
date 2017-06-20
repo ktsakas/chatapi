@@ -37,7 +37,7 @@ func Auth() *jwt.GinJWTMiddleware {
 		},
 		PayloadFunc: func(userEmail string) map[string]interface{} {
 			var userDetails = make(map[string]interface{})
-			var user = model.UserByEmail(userEmail)
+			var user, _ = model.UserByEmail(userEmail)
 			userDetails["uuid"] = user.ID
 			return userDetails
 		},

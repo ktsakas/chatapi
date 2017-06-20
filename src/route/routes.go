@@ -1,11 +1,11 @@
-package main
+package route
 
 import (
 	"net/http"
 
-	"./chat"
-	"./controller"
-	"./middleware"
+	"../chat"
+	"../controller"
+	"../middleware"
 
 	"github.com/gin-gonic/gin"
 )

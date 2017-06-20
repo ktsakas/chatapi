@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 
 	"../model"
@@ -29,8 +28,11 @@ func PostUser(c *gin.Context) {
 		}
 		var err = user.Create()
 		if err != nil {
-			log.Fatal(err)
-			c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": "user already exists"})
+			if err == config.ErrRecordExists {
+				c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "message": "user already exists"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "message": "internal server error"})
+			}
 			return
 		}
 
@@ -49,7 +51,11 @@ func PutUser(c *gin.Context) {
 
 // GetUser controller returns the user info
 func GetUser(c *gin.Context) {
-	var user = model.UserByID(c.Param("id"))
+	var user, err = model.UserByID(c.Param("id"))
 
-	c.JSON(200, user)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 200, "message": "user not found"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
