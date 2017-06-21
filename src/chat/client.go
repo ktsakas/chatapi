@@ -77,6 +77,8 @@ func (client *Client) readFromWS() {
 			var userMessage = UserMessage{}
 			json.Unmarshal(message, &userMessage) // TODO: not needed
 			client.rooms[userMessage.Channel].broadcast <- message
+		} else {
+			client.hub.processMsg <- message
 		}
 	}
 }
@@ -130,17 +132,4 @@ func (client *Client) writeToWS() {
 // JoinRoom adds the user to the room with roomId
 func (client *Client) JoinRoom(roomID int, room *Room) {
 	client.rooms[roomID] = room
-}
-
-// Serve handles websocket requests from the peer.
-func (hub *Hub) Serve(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	client := &Client{hub: hub, rooms: make(map[int]*Room), conn: conn, send: make(chan []byte, 256)}
-	hub.searchMatch <- client
-	go client.writeToWS()
-	client.readFromWS()
 }

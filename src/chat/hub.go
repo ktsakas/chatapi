@@ -1,6 +1,10 @@
 package chat
 
 import (
+	"fmt"
+	"log"
+	"net/http"
+
 	"../model"
 
 	"container/list"
@@ -24,6 +28,9 @@ type Hub struct {
 
 	// SearchMarch request to get matched to a user.
 	searchMatch chan *Client
+
+	// Send match gets requests related to the account.
+	processMsg chan []byte
 }
 
 // New creates a new chat application instance.
@@ -33,6 +40,7 @@ func New() *Hub {
 		register:    make(chan *Client),
 		unregister:  make(chan *Client),
 		searchMatch: make(chan *Client),
+		processMsg:  make(chan []byte),
 	}
 
 	go newHub.run()
@@ -117,4 +125,24 @@ func (hub *Hub) run() {
 		})
 		client.send <- json
 	}
+}
+
+// Serve handles websocket requests from the peer.
+func (hub *Hub) Serve(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	client := &Client{hub: hub, rooms: make(map[int]*Room), conn: conn, send: make(chan []byte, 256)}
+
+	go client.readFromWS()
+	<-hub.processMsg
+	// if GetMessageType(message) == AuthMsgType {
+
+	// }
+
+	hub.searchMatch <- client
+	fmt.Println("process")
+	client.writeToWS()
 }

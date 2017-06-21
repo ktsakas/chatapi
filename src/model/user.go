@@ -3,6 +3,8 @@ package model
 import (
 	"time"
 
+	"../config"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -35,13 +37,18 @@ func (user *User) Create() error {
 		var _, lookupErr = UserByEmail(user.Email)
 
 		if lookupErr == nil {
-			return ErrRecordExists
+			return config.ErrRecordExists
 		}
 
 		return err
 	}
 
 	return nil
+}
+
+// Update updates a user record
+func (user *User) Update() error {
+	return db.Update(&user).Error
 }
 
 // UserByID finds the user given his id.

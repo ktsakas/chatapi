@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"../config"
 	"../model"
 
 	"github.com/gin-gonic/gin"
@@ -46,7 +47,14 @@ func PostUser(c *gin.Context) {
 func PutUser(c *gin.Context) {
 	var id = c.Param("id")
 	var user = model.User{ID: id}
-	user.Create()
+	var err = user.Update()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 200, "message": "could not update the user details"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 // GetUser controller returns the user info

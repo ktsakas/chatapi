@@ -12,7 +12,9 @@ import (
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
-	var authMiddleware = middleware.Auth()
+	var authMiddleware = middleware.Auth{
+		JwtSecret: []byte("abc"),
+	}
 
 	r.POST("/login", authMiddleware.LoginHandler)
 	r.POST("/user", controller.PostUser)
@@ -20,12 +22,13 @@ func SetRoutes(r *gin.Engine) {
 	var auth = r.Group("/")
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
-		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		// auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		// TODO: must validate that the user we need information of is the one logged in
 		auth.PUT("/user/:id", controller.PutUser)
 		auth.GET("/user/:id", controller.GetUser)
 
 		hub := chat.New()
-		auth.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
+		r.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
 			hub.Serve(w, r)
 		}))
 		// r.POST("/chat/", chat.Handler)

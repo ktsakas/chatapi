@@ -6,6 +6,7 @@ import "encoding/json"
 const (
 	UserMsgType          = "userMessage"
 	QueuePositionMsgType = "queuePosition"
+	AuthMsgType          = "authorization"
 )
 
 // QueuePositionMessage is a notification of the queue position sent to the user.
@@ -25,6 +26,13 @@ type UserMessage struct {
 	Type    string `json:"type"`
 	Channel int
 	Text    string
+}
+
+// AuthMessage is an authentication message
+// sent right after a connection is established.
+type AuthMessage struct {
+	Type     string `json:"type"`
+	JwtToken string
 }
 
 // GetMessageType returns the type of the message
