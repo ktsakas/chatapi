@@ -1,12 +1,12 @@
 package route
 
 import (
-	"net/http"
-
 	"../chat"
 	"../controller"
 	"../middleware"
 	"../model"
+
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,10 +46,19 @@ func SetRoutes(r *gin.Engine) {
 		auth.GET("/user/:id", controller.GetUser)
 
 		var hub = chat.New()
-		r.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
-			var user = GetUserFromClaims(authMiddleware.GetClaims())
-			hub.Serve(user, w, r)
-		}))
+		r.GET("/chat/:id", func(c *gin.Context) {
+			var id = c.Param("id")
+			var user, err = model.UserByID(id)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"code":    http.StatusBadRequest,
+					"message": "user not found",
+				})
+				return
+			}
+
+			hub.Serve(user, c.Writer, c.Request)
+		})
 		// r.POST("/chat/", chat.Handler)
 		// r.Handle("WS", "/chat/", chat.Handler)
 

@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -31,6 +30,7 @@ type Hub struct {
 func New() *Hub {
 	var newHub = &Hub{
 		unpaired:    list.New(),
+		users:       make(map[*Client]*model.User),
 		unregister:  make(chan *Client),
 		searchMatch: make(chan *Client),
 	}
@@ -96,26 +96,44 @@ func (hub *Hub) updateQueuePositions(paired *Client) {
 }
 
 func (hub *Hub) run() {
-	var client = <-hub.searchMatch
-	var matchE = hub.findMatch(client)
+	for {
+		select {
+		case client := <-hub.unregister:
+			// Remove from unpaired users if the client is there
+			var user = hub.users[client]
+			for e := hub.unpaired.Front(); e != nil; e = e.Next() {
+				var unpairedUser = hub.users[e.Value.(*Client)]
+				if user == unpairedUser {
+					hub.unpaired.Remove(e)
+					break
+				}
+			}
 
-	if matchE != nil {
-		// Found a match.
-		var match = matchE.Value.(*Client)
-		hub.unpaired.Remove(matchE)
-		hub.updateQueuePositions(match)
+			delete(hub.users, client)
 
-	} else {
-		// Could not find a match, put the client in the queue.
-		hub.unpaired.PushBack(client)
+		case client := <-hub.searchMatch:
+			var matchE = hub.findMatch(client)
 
-		// Notify the client of its position in the queue
-		var queueNum = hub.getPositionInQueue(client)
-		var json, _ = json.Marshal(QueuePositionMessage{
-			Type:     "queuePosition",
-			Position: queueNum,
-		})
-		client.send <- json
+			if matchE != nil {
+				// Found a match.
+				var match = matchE.Value.(*Client)
+				hub.unpaired.Remove(matchE)
+				hub.updateQueuePositions(match)
+
+			} else {
+				var queueNum = hub.getPositionInQueue(client)
+
+				// Put the client in the queue of unpaired clients.
+				hub.unpaired.PushBack(client)
+				// Notify the client of its position in the queue
+				var json, _ = json.Marshal(QueuePositionMessage{
+					Type:     "queuePosition",
+					Position: queueNum,
+				})
+
+				client.send <- json
+			}
+		}
 	}
 }
 
@@ -130,7 +148,6 @@ func (hub *Hub) Serve(user *model.User, w http.ResponseWriter, r *http.Request) 
 	hub.users[client] = user
 
 	hub.searchMatch <- client
-	fmt.Println("process")
 	go client.writeToWS()
 	client.readFromWS()
 }
