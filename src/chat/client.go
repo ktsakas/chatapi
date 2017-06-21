@@ -77,8 +77,6 @@ func (client *Client) readFromWS() {
 			var userMessage = UserMessage{}
 			json.Unmarshal(message, &userMessage) // TODO: not needed
 			client.rooms[userMessage.Channel].broadcast <- message
-		} else {
-			client.hub.processMsg <- message
 		}
 	}
 }

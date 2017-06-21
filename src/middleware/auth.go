@@ -14,6 +14,7 @@ import (
 // Auth is the struct for our authentication middleware
 type Auth struct {
 	JwtSecret []byte
+	claims    map[string]interface{}
 }
 
 // SignToken sings the given claims
@@ -29,7 +30,7 @@ func (auth *Auth) SignToken(claims jwt.MapClaims) (string, error) {
 }
 
 // ValidateToken validates a given token
-func (auth *Auth) ValidateToken(tokenString string) (string, error) {
+func (auth *Auth) ValidateToken(tokenString string) (map[string]interface{}, error) {
 	// Parse takes the token string and a function for looking up the key. The latter is especially
 	// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
 	// head of the token to identify which key to use, but the parsed token (head and claims) is provided
@@ -44,11 +45,12 @@ func (auth *Auth) ValidateToken(tokenString string) (string, error) {
 		return auth.JwtSecret, nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims["email"].(string), nil
+	var claims, ok = token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		return claims, nil
 	}
 
-	return "", err
+	return nil, err
 }
 
 // Authenticator checks the user credentials
@@ -94,6 +96,16 @@ func (auth *Auth) LoginHandler(c *gin.Context) {
 
 func getBearerToken(c *gin.Context) string {
 	return strings.Split(c.Request.Header["Authorization"][0], " ")[1]
+}
+
+// GetClaims can only be used after the user has been authenticated
+// and returns the claims for the user.
+func (auth *Auth) GetClaims() map[string]interface{} {
+	if auth.claims == nil {
+		return nil
+	}
+
+	return auth.claims
 }
 
 // MiddlewareFunc gin authorization middleware

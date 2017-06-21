@@ -6,9 +6,23 @@ import (
 	"../chat"
 	"../controller"
 	"../middleware"
+	"../model"
 
 	"github.com/gin-gonic/gin"
 )
+
+// GetUserFromClaims returns the user model, given the claims of the authorized user.
+func GetUserFromClaims(claims map[string]interface{}) *model.User {
+	var email = claims["email"].(string)
+	var user, err = model.UserByEmail(email)
+
+	if err != nil {
+		// Log critical error here
+		// This should never happen
+	}
+
+	return user
+}
 
 // SetRoutes unexported
 func SetRoutes(r *gin.Engine) {
@@ -20,16 +34,21 @@ func SetRoutes(r *gin.Engine) {
 	r.POST("/user", controller.PostUser)
 
 	var auth = r.Group("/")
+	// TODO: must validate that the user we need information of is the one logged in
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
+		// The user is authenticated in here
+		// however we should still use his credentials to validate he has access
+		// to the specific resources
+
 		// auth.GET("/refresh_token", authMiddleware.RefreshHandler)
-		// TODO: must validate that the user we need information of is the one logged in
 		auth.PUT("/user/:id", controller.PutUser)
 		auth.GET("/user/:id", controller.GetUser)
 
-		hub := chat.New()
+		var hub = chat.New()
 		r.GET("/chat", gin.WrapF(func(w http.ResponseWriter, r *http.Request) {
-			hub.Serve(w, r)
+			var user = GetUserFromClaims(authMiddleware.GetClaims())
+			hub.Serve(user, w, r)
 		}))
 		// r.POST("/chat/", chat.Handler)
 		// r.Handle("WS", "/chat/", chat.Handler)

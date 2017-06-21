@@ -20,27 +20,19 @@ type Hub struct {
 	// Map clients to users
 	users map[*Client]*model.User
 
-	// Register requests from the clients.
-	register chan *Client
-
 	// Unregister requests from the clients.
 	unregister chan *Client
 
 	// SearchMarch request to get matched to a user.
 	searchMatch chan *Client
-
-	// Send match gets requests related to the account.
-	processMsg chan []byte
 }
 
 // New creates a new chat application instance.
 func New() *Hub {
 	var newHub = &Hub{
 		unpaired:    list.New(),
-		register:    make(chan *Client),
 		unregister:  make(chan *Client),
 		searchMatch: make(chan *Client),
-		processMsg:  make(chan []byte),
 	}
 
 	go newHub.run()
@@ -128,21 +120,17 @@ func (hub *Hub) run() {
 }
 
 // Serve handles websocket requests from the peer.
-func (hub *Hub) Serve(w http.ResponseWriter, r *http.Request) {
+func (hub *Hub) Serve(user *model.User, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, rooms: make(map[int]*Room), conn: conn, send: make(chan []byte, 256)}
-
-	go client.readFromWS()
-	<-hub.processMsg
-	// if GetMessageType(message) == AuthMsgType {
-
-	// }
+	var client = &Client{hub: hub, rooms: make(map[int]*Room), conn: conn, send: make(chan []byte, 256)}
+	hub.users[client] = user
 
 	hub.searchMatch <- client
 	fmt.Println("process")
-	client.writeToWS()
+	go client.writeToWS()
+	client.readFromWS()
 }
