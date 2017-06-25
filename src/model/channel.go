@@ -24,6 +24,24 @@ func (channel *Channel) BeforeCreate(scope *gorm.Scope) error {
 	return nil
 }
 
+// FindOrCreatePrivateChannel tries to find a private channel between two users
+// and if no such channel exists it creates it
+func FindOrCreatePrivateChannel(userA *User, userB *User) *Channel {
+	// Create channel in the database if it does not exist
+	var channel, err = FindPrivateChannel(userA, userB)
+	if err == nil {
+		return channel
+	}
+
+	channel = &Channel{
+		IsGroup: false,
+		Name:    userA.Email + " talking with " + userB.Email,
+		Members: []User{*userA, *userB},
+	}
+	channel.Create()
+	return channel
+}
+
 // Create stores a new channel in the database
 func (channel *Channel) Create() error {
 	var err = db.Create(&channel).Error

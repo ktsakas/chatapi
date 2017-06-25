@@ -35,6 +35,7 @@ func New() *Hub {
 		register:    make(chan *Client),
 		unregister:  make(chan *Client),
 		searchMatch: make(chan *Client),
+		rooms:       make(map[*model.Channel]*Room),
 	}
 
 	go newHub.run()
@@ -110,7 +111,7 @@ func (hub *Hub) run() {
 			// Create room if it does not exist
 			var room, ok = hub.rooms[channel]
 			if !ok {
-				room = NewRoom()
+				room = NewRoom([]*Client{client})
 				hub.rooms[channel] = room
 			}
 
@@ -135,15 +136,8 @@ func (hub *Hub) run() {
 				hub.unpaired.Remove(matchE)
 				hub.updateQueuePositions(match)
 
-				// Create channel in the database if it does not exist
-				var channel, err = model.FindPrivateChannel(client.user, match.user)
-				if err != nil {
-					channel = &model.Channel{
-						IsGroup: false,
-						Name:    client.user.Email + " talking with " + match.user.Email,
-					}
-					channel.Create()
-				}
+				var channel = model.FindOrCreatePrivateChannel(client.user, match.user)
+				hub.rooms[channel] = NewRoom([]*Client{client, match})
 
 			} else {
 				var queueNum = hub.getPositionInQueue(client)

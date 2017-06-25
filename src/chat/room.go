@@ -15,8 +15,8 @@ type Room struct {
 	unregister chan *Client
 }
 
-// NewRoom creates a new room with no clients.
-func NewRoom() *Room {
+// NewRoom creates a new room with the given clients.
+func NewRoom([]*Client) *Room {
 	return &Room{
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
