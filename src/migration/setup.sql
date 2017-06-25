@@ -1,4 +1,5 @@
 DROP TABLE contacts;
+DROP TABLE channel_users;
 DROP TABLE messages;
 DROP TABLE channels;
 DROP TABLE users;
@@ -26,23 +27,32 @@ CREATE TABLE contacts (
 CREATE TABLE channels (
     id SERIAL PRIMARY KEY,
     is_group BOOLEAN,
-    name VARCHAR(255) UNIQUE,
-    domain VARCHAR(255)
+    name VARCHAR(255),
+    domain VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP
 );
 
-INSERT INTO channels (name, domain) VALUES
-    ('Harvard University', 'harvard.edu'),
-    ('Brown University', 'brown.edu'),
-    ('Columbia University', 'columbia.edu'),
-    ('Cornell University', 'cornell.edu'),
-    ('Dartmouth College', 'dartmouth.edu'),
-    ('University of Pennsylvania', 'upenn.edu'),
-    ('Princeton University', 'princeton.edu'),
-    ('Yale University', 'yale.edu');
+INSERT INTO channels (name, is_group, domain, created_at) VALUES
+    ('Harvard University', true, 'harvard.edu', NOW()),
+    ('Brown University', true, 'brown.edu', NOW()),
+    ('Columbia University', true, 'columbia.edu', NOW()),
+    ('Cornell University', true, 'cornell.edu', NOW()),
+    ('Dartmouth College', true, 'dartmouth.edu', NOW()),
+    ('University of Pennsylvania', true, 'upenn.edu', NOW()),
+    ('Princeton University', true, 'princeton.edu', NOW()),
+    ('Yale University', true, 'yale.edu', NOW());
+
+-- Create channels to users table
+CREATE TABLE channel_users (
+    channel_id SERIAL REFERENCES channels (id),
+    user_id SERIAL REFERENCES users (id),
+    UNIQUE(channel_id, user_id)
+);
 
 -- Create messages table
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     channel_id SERIAL REFERENCES channels (id),
-    sender_id SERIAL REFERENCES users (id)
+    sender_id SERIAL REFERENCES users (id),
+    created_at TIMESTAMP
 );

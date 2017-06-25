@@ -9,14 +9,15 @@ import (
 
 // Message model
 type Message struct {
-	ID        string `json:"id"`
-	ChannelID string `json:"channel"`
-	Content   string `json:"content"`
-	CreatedAt time.Time
+	ID        string    `json:"id"`
+	ChannelID string    `json:"channel"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // BeforeCreate sets the UUID before message creation
 func (message *Message) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("ID", uuid.NewV4().String())
+	scope.SetColumn("CreatedAt", time.Now())
 	return nil
 }

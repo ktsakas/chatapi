@@ -110,7 +110,7 @@ func (hub *Hub) run() {
 			// Create room if it does not exist
 			var room, ok = hub.rooms[channel]
 			if !ok {
-				room = NewRoom(channel)
+				room = NewRoom()
 				hub.rooms[channel] = room
 			}
 
@@ -134,6 +134,16 @@ func (hub *Hub) run() {
 				var match = matchE.Value.(*Client)
 				hub.unpaired.Remove(matchE)
 				hub.updateQueuePositions(match)
+
+				// Create channel in the database if it does not exist
+				var channel, err = model.FindPrivateChannel(client.user, match.user)
+				if err != nil {
+					channel = &model.Channel{
+						IsGroup: false,
+						Name:    client.user.Email + " talking with " + match.user.Email,
+					}
+					channel.Create()
+				}
 
 			} else {
 				var queueNum = hub.getPositionInQueue(client)
