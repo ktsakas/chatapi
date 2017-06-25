@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"../model"
+
 	"encoding/json"
 
 	"github.com/gorilla/websocket"
@@ -42,6 +44,9 @@ var upgrader = websocket.Upgrader{
 type Client struct {
 	hub *Hub
 
+	// User that the client corresponds to.
+	user *model.User
+
 	rooms map[int]*Room
 
 	// The websocket connection.
@@ -76,7 +81,12 @@ func (client *Client) readFromWS() {
 		if GetMessageType(message) == UserMsgType {
 			var userMessage = UserMessage{}
 			json.Unmarshal(message, &userMessage) // TODO: not needed
-			client.rooms[userMessage.Channel].broadcast <- message
+
+			if room, ok := client.rooms[userMessage.Channel]; ok {
+				room.broadcast <- message
+			} else {
+				client.send <- []byte(`{ "type": "error", "code": 400, "message": "channel does not exist" }`)
+			}
 		}
 	}
 }
@@ -130,4 +140,33 @@ func (client *Client) writeToWS() {
 // JoinRoom adds the user to the room with roomId
 func (client *Client) JoinRoom(roomID int, room *Room) {
 	client.rooms[roomID] = room
+}
+
+// NewClient creates a new instance of a client struct
+// for a given hub and user.
+func (hub *Hub) NewClient(user *model.User) *Client {
+	return &Client{
+		hub:   hub,
+		user:  user,
+		rooms: make(map[int]*Room),
+		conn:  nil, // The connection is set later.
+		send:  make(chan []byte, 256),
+	}
+}
+
+// Serve handles websocket requests from the peer.
+func (client *Client) Serve(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	client.conn = conn
+	// TODO: consider case of multiple clients per user
+	client.hub.register <- client
+	client.hub.searchMatch <- client
+
+	go client.writeToWS()
+	client.readFromWS()
 }

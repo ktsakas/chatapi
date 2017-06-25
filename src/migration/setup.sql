@@ -25,8 +25,20 @@ CREATE TABLE contacts (
 -- Create channels table
 CREATE TABLE channels (
     id SERIAL PRIMARY KEY,
-    organization VARCHAR(255) UNIQUE
+    is_group BOOLEAN,
+    name VARCHAR(255) UNIQUE,
+    domain VARCHAR(255)
 );
+
+INSERT INTO channels (name, domain) VALUES
+    ('Harvard University', 'harvard.edu'),
+    ('Brown University', 'brown.edu'),
+    ('Columbia University', 'columbia.edu'),
+    ('Cornell University', 'cornell.edu'),
+    ('Dartmouth College', 'dartmouth.edu'),
+    ('University of Pennsylvania', 'upenn.edu'),
+    ('Princeton University', 'princeton.edu'),
+    ('Yale University', 'yale.edu');
 
 -- Create messages table
 CREATE TABLE messages (

@@ -1,8 +1,7 @@
 package chat
 
 import (
-	"log"
-	"net/http"
+	"strings"
 
 	"../model"
 
@@ -13,11 +12,14 @@ import (
 // Hub is a middleman between incoming connections
 // and chat rooms.
 type Hub struct {
+	// Map channels to rooms.
+	rooms map[*model.Channel]*Room
+
 	// Set of clients that have not been paired with someone to talk.
 	unpaired *list.List
 
-	// Map clients to users
-	users map[*Client]*model.User
+	// Register requests from the clients (ie. when the user opens the app).
+	register chan *Client
 
 	// Unregister requests from the clients.
 	unregister chan *Client
@@ -30,7 +32,7 @@ type Hub struct {
 func New() *Hub {
 	var newHub = &Hub{
 		unpaired:    list.New(),
-		users:       make(map[*Client]*model.User),
+		register:    make(chan *Client),
 		unregister:  make(chan *Client),
 		searchMatch: make(chan *Client),
 	}
@@ -39,8 +41,8 @@ func New() *Hub {
 	return newHub
 }
 
-func sameInterests(userA *model.User, userB *model.User) bool {
-	return (userA.TalkingTo == userB.TalkingTo && userA.Sex == userB.Sex)
+func sameInterests(clientA *Client, clientB *Client) bool {
+	return (clientA.user.TalkingTo == clientB.user.TalkingTo && clientA.user.Sex == clientB.user.Sex)
 }
 
 func isMatch(userA *model.User, userB *model.User) bool {
@@ -49,11 +51,10 @@ func isMatch(userA *model.User, userB *model.User) bool {
 
 // findMatch finds another client to pair with or returns nil
 func (hub *Hub) findMatch(client *Client) *list.Element {
-	var user = hub.users[client]
 	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
-		var possibleMatch = hub.users[e.Value.(*Client)]
+		var possibleMatch = e.Value.(*Client).user
 
-		if isMatch(user, possibleMatch) {
+		if isMatch(client.user, possibleMatch) {
 			return e
 		}
 	}
@@ -61,13 +62,13 @@ func (hub *Hub) findMatch(client *Client) *list.Element {
 	return nil
 }
 
+// Gets the current position of the given client in the queue
 func (hub *Hub) getPositionInQueue(client *Client) int {
-	var user = hub.users[client]
 	var queueNum = 1
 	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
-		var competitor = hub.users[e.Value.(*Client)]
+		var competitor = e.Value.(*Client)
 
-		if sameInterests(user, competitor) {
+		if sameInterests(client, competitor) {
 			queueNum++
 		}
 	}
@@ -75,15 +76,14 @@ func (hub *Hub) getPositionInQueue(client *Client) int {
 	return queueNum
 }
 
+// Updates the position of all clients when a new client is paired
 func (hub *Hub) updateQueuePositions(paired *Client) {
-	var pairedUser = hub.users[paired]
 	var queueNum = 1
 	for e := hub.unpaired.Front(); e != nil; e = e.Next() {
 		var queuedClient = e.Value.(*Client)
-		var queuedUser = hub.users[queuedClient]
 
-		if sameInterests(pairedUser, queuedUser) {
-			// Update queue number
+		if sameInterests(paired, queuedClient) {
+			// Update queue position
 			var json, _ = json.Marshal(QueuePositionMessage{
 				Type:     "queuePosition",
 				Position: queueNum,
@@ -98,18 +98,33 @@ func (hub *Hub) updateQueuePositions(paired *Client) {
 func (hub *Hub) run() {
 	for {
 		select {
+		case client := <-hub.register:
+			var domain = strings.Split(client.user.Email, "@")[1]
+			var channel, err = model.ChannelByDomain(domain)
+
+			if err != nil {
+				// Critical this should never happen
+				continue
+			}
+
+			// Create room if it does not exist
+			var room, ok = hub.rooms[channel]
+			if !ok {
+				room = NewRoom(channel)
+				hub.rooms[channel] = room
+			}
+
+			room.register <- client
+
 		case client := <-hub.unregister:
 			// Remove from unpaired users if the client is there
-			var user = hub.users[client]
 			for e := hub.unpaired.Front(); e != nil; e = e.Next() {
-				var unpairedUser = hub.users[e.Value.(*Client)]
-				if user == unpairedUser {
+				var unpairedClient = e.Value.(*Client)
+				if client == unpairedClient {
 					hub.unpaired.Remove(e)
 					break
 				}
 			}
-
-			delete(hub.users, client)
 
 		case client := <-hub.searchMatch:
 			var matchE = hub.findMatch(client)
@@ -135,19 +150,4 @@ func (hub *Hub) run() {
 			}
 		}
 	}
-}
-
-// Serve handles websocket requests from the peer.
-func (hub *Hub) Serve(user *model.User, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	var client = &Client{hub: hub, rooms: make(map[int]*Room), conn: conn, send: make(chan []byte, 256)}
-	hub.users[client] = user
-
-	hub.searchMatch <- client
-	go client.writeToWS()
-	client.readFromWS()
 }

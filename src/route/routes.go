@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 // GetUserFromClaims returns the user model, given the claims of the authorized user.
@@ -17,8 +18,7 @@ func GetUserFromClaims(claims map[string]interface{}) *model.User {
 	var user, err = model.UserByEmail(email)
 
 	if err != nil {
-		// Log critical error here
-		// This should never happen
+		log.Error("The authorized logged in user could not be found in the user database!")
 	}
 
 	return user
@@ -57,7 +57,7 @@ func SetRoutes(r *gin.Engine) {
 				return
 			}
 
-			hub.Serve(user, c.Writer, c.Request)
+			hub.NewClient(user).Serve(c.Writer, c.Request)
 		})
 		// r.POST("/chat/", chat.Handler)
 		// r.Handle("WS", "/chat/", chat.Handler)

@@ -1,7 +1,12 @@
 package chat
 
+import "../model"
+
 // Room maintains the set of active clients and broadcasts messages to the clients.
 type Room struct {
+	// The channel in the database correpsponding to this room.
+	channel *model.Channel
+
 	// Registered clients.
 	clients map[*Client]bool
 
@@ -16,8 +21,9 @@ type Room struct {
 }
 
 // NewRoom creates a new room with no clients.
-func NewRoom() *Room {
+func NewRoom(channel *model.Channel) *Room {
 	return &Room{
+		channel:    channel,
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),

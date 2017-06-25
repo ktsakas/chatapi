@@ -41,3 +41,8 @@ func GetMessageType(jsonStr []byte) string {
 	json.Unmarshal(jsonStr, &jsonMap)
 	return jsonMap["type"].(string)
 }
+
+// MessageFromString returns a message struct from a json string
+func MessageFromString(jsonStr []byte) {
+	return
+}
