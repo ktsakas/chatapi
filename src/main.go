@@ -19,7 +19,7 @@ func main() {
 	}
 
 	var port = os.Getenv("APP_PORT")
-	model.Connect()
+	model.Connect("collegechat")
 
 	var r = gin.Default()
 

@@ -2,19 +2,38 @@ package migration
 
 import (
 	"database/sql"
+	"log"
 
-	_ "github.com/lib/pq"
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/postgres"
+
+	// Required to avoid unknown driver file error
 	_ "github.com/mattes/migrate/source/file"
 )
 
-func Setup() {
-	db, _ := sql.Open("postgres", "postgres://localhost:5432/database?sslmode=enable")
-	driver, _ := postgres.WithInstance(db, &postgres.Config{})
-	m, _ := migrate.NewWithDatabaseInstance(
-		"./setup.sql",
-		"postgres", driver)
+// TODO: change this to use and sql dump to load database
+func Rebuild() {
+	db, err := sql.Open("postgres", "postgres://localhost:5433/collegechat_test?sslmode=disable&user=postgres&password=admin")
+	if err != nil {
+		println("Failed to connect to test database " + "collegechat_test.")
+		log.Fatal(err)
+	}
 
-	m.Steps(1)
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		println("Failed to get driver from database instance " + "collegechat_test.")
+		log.Fatal(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://../migration",
+		"postgres", driver)
+	defer m.Close()
+	if err != nil {
+		println("Failed to run migration.")
+		log.Fatal(err)
+	}
+
+	m.Drop()
+	m.Up()
 }

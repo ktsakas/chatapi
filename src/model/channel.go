@@ -1,27 +1,19 @@
 package model
 
 import (
+	"strconv"
 	"time"
-
-	"github.com/jinzhu/gorm"
-	"github.com/satori/go.uuid"
 )
 
 // Channel model
 type Channel struct {
 	ID        string    `json:"id"`
-	IsGroup   bool      `json:"isGroup"`
 	Name      string    `json:"name"`
+	IsGroup   bool      `json:"isGroup"`
 	Domain    string    `json:"domain"`
 	CreatedAt time.Time `json:"createdAt"`
 
 	Members []User `gorm:"many2many:channel_users;"`
-}
-
-// BeforeCreate sets the UUID before channel creation
-func (channel *Channel) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("ID", uuid.NewV4().String())
-	return nil
 }
 
 // FindOrCreatePrivateChannel tries to find a private channel between two users
@@ -44,33 +36,29 @@ func FindOrCreatePrivateChannel(userA *User, userB *User) *Channel {
 
 // Create stores a new channel in the database
 func (channel *Channel) Create() error {
-	var err = db.Create(&channel).Error
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return db.Create(&channel).Error
 }
 
 // FindPrivateChannel finds a private channel between two users if one exists.
 func FindPrivateChannel(userA *User, userB *User) (*Channel, error) {
-	var privateChannel *Channel
 	// Find private channel where both userA and userB belong
-	var err = db.Raw(
-		`SELECT channels.*
+	var userAid, _ = strconv.Atoi(userA.ID)
+	var userBid, _ = strconv.Atoi(userB.ID)
+
+	var channel Channel
+	db.Raw(`SELECT channels.*
 		FROM channels, channel_users as memberA, channel_users as memberB
 		WHERE memberA.user_id = ?
 		AND memberB.user_id = ?
 		AND memberA.channel_id = memberB.channel_id
 		AND channels.id = memberA.channel_id
-		AND channels.is_group = false`, userA.ID, userB.ID).Scan(&privateChannel).Error
+		AND channels.is_group = false;`, userAid, userBid).Scan(&channel)
 
-	if err != nil {
-		return nil, err
+	if db.Error != nil {
+		return nil, db.Error
 	}
 
-	return privateChannel, nil
+	return &channel, nil
 }
 
 // ChannelByDomain finds a channel given a domain name.

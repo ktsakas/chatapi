@@ -31,7 +31,7 @@ func (user *User) BeforeCreate(scope *gorm.Scope) error {
 // Create adds the user struct in the database
 // and returns the stored record.
 func (user *User) Create() error {
-	var err = db.Create(&user).Error
+	var err = db.Create(user).Error
 
 	if err != nil {
 		var _, lookupErr = UserByEmail(user.Email)

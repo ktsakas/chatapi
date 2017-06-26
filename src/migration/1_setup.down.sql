@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS contacts;
+DROP TABLE IF EXISTS channel_users;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS users;

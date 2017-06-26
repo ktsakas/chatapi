@@ -1,9 +1,3 @@
-DROP TABLE contacts;
-DROP TABLE channel_users;
-DROP TABLE messages;
-DROP TABLE channels;
-DROP TABLE users;
-
 -- Create users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
