@@ -80,10 +80,10 @@ func TestFindPrivateChannel(t *testing.T) {
 		t.Fatal("Failed to find the private channel that was created.", findErr)
 	}
 
-	if newChannel.ID == privateChannel.ID &&
-		newChannel.Name == privateChannel.Name &&
-		newChannel.Domain == privateChannel.Domain &&
-		newChannel.CreatedAt == privateChannel.CreatedAt {
+	if newChannel.ID != privateChannel.ID ||
+		newChannel.Name != privateChannel.Name ||
+		newChannel.Domain != privateChannel.Domain ||
+		newChannel.CreatedAt != privateChannel.CreatedAt {
 		t.Fatal("Private channel found does not match.")
 	}
 }
