@@ -18,13 +18,13 @@ type QueuePositionMessage struct {
 // ConnectMessage is a notification that a user has joined a channel.
 type ConnectMessage struct {
 	Type    string `json:"connection"`
-	Channel int    `json:"channel"`
+	Channel string `json:"channel"`
 }
 
 // UserMessage is a chat message sent by a user.
 type UserMessage struct {
 	Type    string `json:"type"`
-	Channel int    `json:"channel"`
+	Channel string `json:"channel"`
 	Text    string `json:"text"`
 }
 

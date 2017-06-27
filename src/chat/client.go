@@ -47,7 +47,9 @@ type Client struct {
 	// User that the client corresponds to.
 	user *model.User
 
-	rooms map[int]*Room
+	// Channel id to room mapping.
+	// Client keeps it's own mapping to avoid connecting to room that is not authorized.
+	rooms map[string]*Room
 
 	// The websocket connection.
 	conn *websocket.Conn
@@ -71,6 +73,7 @@ func (client *Client) readFromWS() {
 	client.conn.SetPongHandler(func(string) error { client.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		_, message, err := client.conn.ReadMessage()
+		println("got new message!")
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
@@ -138,8 +141,10 @@ func (client *Client) writeToWS() {
 }
 
 // JoinRoom adds the user to the room with roomId
-func (client *Client) JoinRoom(roomID int, room *Room) {
+func (client *Client) JoinRoom(roomID string, room *Room) {
 	client.rooms[roomID] = room
+
+	client.send <- []byte(`{ "type": "joinedChannel", "channel": ` + roomID + ` }`)
 }
 
 // NewClient creates a new instance of a client struct
@@ -148,7 +153,7 @@ func (hub *Hub) NewClient(user *model.User) *Client {
 	return &Client{
 		hub:   hub,
 		user:  user,
-		rooms: make(map[int]*Room),
+		rooms: make(map[string]*Room),
 		conn:  nil, // The connection is set later.
 		send:  make(chan []byte, 256),
 	}

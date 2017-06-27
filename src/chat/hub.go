@@ -138,6 +138,7 @@ func (hub *Hub) run() {
 
 				var channel = model.FindOrCreatePrivateChannel(client.user, match.user)
 				hub.rooms[channel] = NewRoom([]*Client{client, match})
+				client.JoinRoom(channel.ID, hub.rooms[channel])
 
 			} else {
 				var queueNum = hub.getPositionInQueue(client)

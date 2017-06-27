@@ -17,16 +17,19 @@ type Room struct {
 
 // NewRoom creates a new room with the given clients.
 func NewRoom([]*Client) *Room {
-	return &Room{
+	var room = &Room{
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 	}
+
+	go room.run()
+	return room
 }
 
-// Run starts accepting connections and messages to the room.
-func (room *Room) Run() {
+// run starts accepting connections and messages to the room.
+func (room *Room) run() {
 	for {
 		select {
 		case client := <-room.register:

@@ -42,7 +42,7 @@ func TestValidCreateUserRequest(t *testing.T) {
 
 	// Check for valid status code
 	if resp.StatusCode != http.StatusOK {
-		t.Error("POST: /user failed with status ", resp.StatusCode)
+		t.Fatal("POST: /user failed with status ", resp.StatusCode)
 	}
 
 	// Decode json

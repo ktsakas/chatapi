@@ -3,6 +3,9 @@ package model
 import (
 	"strconv"
 	"time"
+
+	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Channel model
@@ -14,6 +17,12 @@ type Channel struct {
 	CreatedAt time.Time `json:"createdAt"`
 
 	Members []User `gorm:"many2many:channel_users;"`
+}
+
+// BeforeCreate sets the UUID before message creation
+func (channel *Channel) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("ID", uuid.NewV4().String())
+	return nil
 }
 
 // FindOrCreatePrivateChannel tries to find a private channel between two users

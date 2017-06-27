@@ -6,6 +6,7 @@ import (
 	"../config"
 
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 )
 
 // User model
@@ -23,6 +24,7 @@ type User struct {
 
 // BeforeCreate sets the UUID before user creation
 func (user *User) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("ID", uuid.NewV4().String())
 	scope.SetColumn("CreatedAt", time.Now())
 	scope.SetColumn("UpdatedAt", time.Now())
 	return nil
