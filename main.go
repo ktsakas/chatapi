@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	var config = config.GetConfig()
+	config.LoadConfig()
 	model.Connect("collegechat")
 
 	var r = gin.Default()

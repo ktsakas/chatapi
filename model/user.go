@@ -59,7 +59,7 @@ func UserByID(id string) (*User, error) {
 		ID: id,
 	}
 
-	var err = db.First(&user).Error
+	var err = db.Where(&user).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func UserByEmail(email string) (*User, error) {
 		Email: email,
 	}
 
-	var err = db.First(&user).Error
+	var err = db.Where(&user).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -91,4 +91,14 @@ func ValidateUserCredentials(email, password string) (*User, bool) {
 	}
 
 	return &user, true
+}
+
+// Delete deletes the given user
+// ** this should only be used for testing purposes **
+func (user *User) Delete() error {
+	if config.Get("Environment") != "DEV" {
+		panic("User.Delete should never be called in production!")
+	}
+
+	return db.Delete(user).Error
 }

@@ -25,20 +25,24 @@ func generateUser(t *testing.T) *User {
 
 func TestUserByEmail(t *testing.T) {
 	var newUser = generateUser(t)
-	var user, err = UserByID(newUser.ID)
+	defer newUser.Delete()
+
+	var user, err = UserByEmail(newUser.Email)
 	if err != nil {
 		t.Fatal("Could not find previously created user by email.")
 	} else if newUser.ID != user.ID {
-		t.Fatal("The user ID found is different from the one created.")
+		t.Fatal("The user we created \"" + newUser.ID + "\" is different from the one we found \"" + user.ID + "\".")
 	}
 }
 
 func TestUserByID(t *testing.T) {
 	var newUser = generateUser(t)
-	var user, err = UserByEmail(newUser.Email)
+	defer newUser.Delete()
+
+	var user, err = UserByID(newUser.ID)
 	if err != nil {
 		t.Fatal("Could not find previously created user by id.")
 	} else if newUser.ID != user.ID {
-		t.Fatal("The user ID found is different from the one created.")
+		t.Fatal("The user we created \"" + newUser.ID + "\" is different from the one we found \"" + user.ID + "\".")
 	}
 }

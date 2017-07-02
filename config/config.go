@@ -7,27 +7,27 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type config struct {
-	// Port for the app in dev mode
-	DevPort string
-}
+// TODO: use the viper package for configuration instead
 
-var cachedConfig *config
+var configLoaded = false
 
-// GetConfig reads the configuration from the .env file
-// into the variables exported by the config package
-// if it has already been read it returns a cached version
-func GetConfig() *config {
-	if cachedConfig == nil {
-		var err = godotenv.Load(".env")
+// Get reads returns a configuration value for the given key.
+// If the .env file has not been read, it will load it.
+func Get(key string) string {
+	if !configLoaded {
+		var err = godotenv.Load("../.env")
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		cachedConfig = &config{
-			DevPort: os.Getenv("DEV_PORT"),
-		}
+		configLoaded = true
 	}
 
-	return cachedConfig
+	switch key {
+	case "DevPort":
+		return os.Getenv("DEV_PORT")
+	case "Environment":
+		return os.Getenv("ENVIRONMENT")
+	default:
+		panic("Environment variable " + key + " not found!")
+	}
 }
