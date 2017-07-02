@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"../config"
 	"../migration"
 
 	"encoding/json"
@@ -15,6 +16,7 @@ import (
 
 // Valid user id for testing
 var testUserID string
+var testAppURL = "http://localhost:" + config.TestPort
 
 func TestMain(m *testing.M) {
 	migration.Rebuild()
@@ -30,7 +32,7 @@ func requestFailMsg(route string, resp gorequest.Response) string {
 
 func TestBadCreateUserRequest(t *testing.T) {
 	request := gorequest.New()
-	resp, _, _ := request.Post("http://localhost:8080/user").
+	resp, _, _ := request.Post(testAppURL + "/user").
 		Type("form").
 		SendMap(map[string]string{
 			"email":    "user@test.com",
@@ -46,7 +48,7 @@ func TestBadCreateUserRequest(t *testing.T) {
 
 func TestValidCreateUserRequest(t *testing.T) {
 	request := gorequest.New()
-	resp, _, _ := request.Post("http://localhost:8080/user").
+	resp, _, _ := request.Post(testAppURL + "/user").
 		Type("form").
 		SendMap(map[string]string{
 			"email":     "user@test.com",
@@ -72,7 +74,7 @@ func TestValidCreateUserRequest(t *testing.T) {
 // Test that a user with the given ID exists.
 func testUserExists(userID string, t *testing.T) {
 	request := gorequest.New()
-	resp, _, _ := request.Get("http://localhost:8080/user/" + userID).End()
+	resp, _, _ := request.Get(testAppURL + "/user/" + userID).End()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatal("User with id " + userID + " does not exist")
@@ -81,7 +83,7 @@ func testUserExists(userID string, t *testing.T) {
 
 func TestUserLogin(t *testing.T) {
 	request := gorequest.New()
-	resp, _, _ := request.Post("http://localhost:8080/user").
+	resp, _, _ := request.Post(testAppURL + "/user").
 		Type("form").
 		SendMap(map[string]string{
 			"email":     "user@login.com",
@@ -97,7 +99,7 @@ func TestUserLogin(t *testing.T) {
 	}
 
 	var loginReq = gorequest.New()
-	loginResp, _, _ := loginReq.Post("http://localhost:8080/login").
+	loginResp, _, _ := loginReq.Post(testAppURL + "/login").
 		Type("form").
 		SendMap(map[string]string{
 			"email":    "test@login.com",
