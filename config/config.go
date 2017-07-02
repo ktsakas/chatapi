@@ -3,6 +3,8 @@ package config
 import (
 	"log"
 	"os"
+	"path"
+	"runtime"
 
 	"github.com/joho/godotenv"
 )
@@ -15,7 +17,13 @@ var configLoaded = false
 // If the .env file has not been read, it will load it.
 func Get(key string) string {
 	if !configLoaded {
-		var err = godotenv.Load("../.env")
+		var _, filename, _, ok = runtime.Caller(0)
+		if !ok {
+			panic("No caller information")
+		}
+		var packageDir = path.Dir(filename)
+
+		var err = godotenv.Load(packageDir + "/../.env")
 		if err != nil {
 			log.Fatal(err)
 		}
