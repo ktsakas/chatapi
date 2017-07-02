@@ -46,3 +46,13 @@ func TestUserByID(t *testing.T) {
 		t.Fatal("The user we created \"" + newUser.ID + "\" is different from the one we found \"" + user.ID + "\".")
 	}
 }
+
+func TestValidateUserCredentials(t *testing.T) {
+	var newUser = generateUser(t)
+	defer newUser.Delete()
+
+	var user, valid = ValidateUserCredentials(newUser.Email, newUser.Password)
+	if !valid {
+		t.Fatal("Failed to login user with username \"" + user.Email + "\" and password \"" + user.Password + "\".")
+	}
+}

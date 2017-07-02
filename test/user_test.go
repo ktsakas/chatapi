@@ -86,7 +86,7 @@ func TestUserLogin(t *testing.T) {
 	resp, _, _ := request.Post(appURL + "/user").
 		Type("form").
 		SendMap(map[string]string{
-			"email":     "user@login.com",
+			"email":     "test@login.com",
 			"password":  "loginpass9",
 			"sex":       "male",
 			"talkingTo": "girls",
@@ -109,7 +109,7 @@ func TestUserLogin(t *testing.T) {
 
 	// Check for valid login
 	if loginResp.StatusCode != http.StatusOK {
-		t.Fatal(requestFailMsg("/user", resp))
+		t.Fatal(requestFailMsg("/user", loginResp))
 	}
 
 	// TODO: test that we got token back

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	"../config"
@@ -83,8 +84,13 @@ func UserByEmail(email string) (*User, error) {
 
 // ValidateUserCredentials checks the username and password against the databse
 func ValidateUserCredentials(email, password string) (*User, bool) {
-	var user = User{}
-	var recordNotFound = db.Where("email = ? AND password = ?", email, password).First(&user).RecordNotFound()
+	var user = User{
+		Email:    email,
+		Password: password,
+	}
+	var errors = db.GetErrors()
+	fmt.Print(errors)
+	var recordNotFound = db.Where(&user).First(&user).RecordNotFound()
 
 	if recordNotFound {
 		return nil, false

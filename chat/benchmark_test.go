@@ -67,13 +67,6 @@ func websocketClient(reciever chan []byte, b *testing.B) {
 	}
 }
 
-func fib(n int) int {
-	if n < 2 {
-		return n
-	}
-	return fib(n-1) + fib(n-2)
-}
-
 // TODO: write benchmark between two clients
 func BenchmarkClient(b *testing.B) {
 	var reciever = make(chan []byte)
