@@ -8,7 +8,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	Connect("collegechat_test")
+	Connect("collegechat")
 
 	migration.Rebuild()
 
@@ -82,8 +82,7 @@ func TestFindPrivateChannel(t *testing.T) {
 
 	if newChannel.ID != privateChannel.ID ||
 		newChannel.Name != privateChannel.Name ||
-		newChannel.Domain != privateChannel.Domain ||
-		newChannel.CreatedAt != privateChannel.CreatedAt {
+		newChannel.Domain != privateChannel.Domain {
 		t.Fatal("Private channel found does not match.")
 	}
 }

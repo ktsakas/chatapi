@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	config.LoadConfig()
 	model.Connect("collegechat")
 
 	var r = gin.Default()
@@ -29,5 +28,5 @@ func main() {
 	}))
 
 	route.SetRoutes(r)
-	r.Run("127.0.0.1:" + config.DevPort)
+	r.Run("127.0.0.1:" + config.Get("DevPort"))
 }

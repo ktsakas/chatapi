@@ -13,15 +13,15 @@ import (
 
 // TODO: change this to use and sql dump to load database
 func Rebuild() {
-	db, err := sql.Open("postgres", "postgres://localhost:5433/collegechat_test?sslmode=disable&user=postgres&password=admin")
+	db, err := sql.Open("postgres", "postgres://localhost:5433/collegechat?sslmode=disable&user=postgres&password=admin")
 	if err != nil {
-		println("Failed to connect to test database " + "collegechat_test.")
+		println("Failed to connect to test database " + "collegechat.")
 		log.Fatal(err)
 	}
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		println("Failed to get driver from database instance " + "collegechat_test.")
+		println("Failed to get driver from database instance " + "collegechat.")
 		log.Fatal(err)
 	}
 

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -51,9 +50,6 @@ func (channel *Channel) Create() error {
 // FindPrivateChannel finds a private channel between two users if one exists.
 func FindPrivateChannel(userA *User, userB *User) (*Channel, error) {
 	// Find private channel where both userA and userB belong
-	var userAid, _ = strconv.Atoi(userA.ID)
-	var userBid, _ = strconv.Atoi(userB.ID)
-
 	var channel Channel
 	db.Raw(`SELECT channels.*
 		FROM channels, channel_users as memberA, channel_users as memberB
@@ -61,7 +57,7 @@ func FindPrivateChannel(userA *User, userB *User) (*Channel, error) {
 		AND memberB.user_id = ?
 		AND memberA.channel_id = memberB.channel_id
 		AND channels.id = memberA.channel_id
-		AND channels.is_group = false;`, userAid, userBid).Scan(&channel)
+		AND channels.is_group = false;`, userA.ID, userB.ID).Scan(&channel)
 
 	if db.Error != nil {
 		return nil, db.Error
