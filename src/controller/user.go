@@ -20,7 +20,8 @@ type signupForm struct {
 func PostUser(c *gin.Context) {
 	var form signupForm
 
-	if c.Bind(&form) == nil {
+	var fieldsErr = c.Bind(&form)
+	if fieldsErr == nil {
 		var user = model.User{
 			Email:     form.Email,
 			Password:  form.Password,
@@ -39,7 +40,7 @@ func PostUser(c *gin.Context) {
 
 		c.JSON(http.StatusOK, user)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": "bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"code": 400, "message": fieldsErr.Error()})
 	}
 }
 

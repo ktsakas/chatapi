@@ -36,10 +36,15 @@ type AuthMessage struct {
 }
 
 // GetMessageType returns the type of the message
-func GetMessageType(jsonStr []byte) string {
+func GetMessageType(jsonStr []byte) (string, error) {
 	var jsonMap map[string]interface{}
-	json.Unmarshal(jsonStr, &jsonMap)
-	return jsonMap["type"].(string)
+	var err = json.Unmarshal(jsonStr, &jsonMap)
+
+	if err != nil {
+		return "", err
+	}
+
+	return jsonMap["type"].(string), nil
 }
 
 // MessageFromString returns a message struct from a json string

@@ -73,7 +73,7 @@ func (client *Client) readFromWS() {
 	client.conn.SetPongHandler(func(string) error { client.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		_, message, err := client.conn.ReadMessage()
-		println("got new message!")
+		// println("got new message!")
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
@@ -81,7 +81,13 @@ func (client *Client) readFromWS() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		if GetMessageType(message) == UserMsgType {
+		msgType, err := GetMessageType(message)
+		if err != nil {
+			client.send <- []byte(`{ "type": "error", "code": 400, "message": "bad message" }`)
+			continue
+		}
+
+		if msgType == UserMsgType {
 			var userMessage = UserMessage{}
 			json.Unmarshal(message, &userMessage) // TODO: not needed
 

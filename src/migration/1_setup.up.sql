@@ -10,6 +10,11 @@ CREATE TABLE users (
     updated_at TIMESTAMP
 );
 
+-- TODO: this needs to only be done for development mode
+INSERT INTO users (id, email, password, university, talking_to, sex) VALUES
+    ('ceee16ac-3111-4efe-b61b-cfbe4563eeaf', 'test1@brown.edu', 'testing9', 'Brown University', 'girls', 'boy'),
+    ('11855dff-7fd4-45d6-a1c5-e5531e190958', 'test2@harvard.edu', 'testing9', 'Harvard University', 'girls', 'boy');
+
 -- Create contacts table (many2many: user <-> user)
 CREATE TABLE contacts (
     usera_id UUID REFERENCES users (id),

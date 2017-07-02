@@ -1,4 +1,0 @@
-pkg
-*.exe
-**/debug*
-.env
